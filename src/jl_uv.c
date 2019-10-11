@@ -610,6 +610,10 @@ JL_DLLEXPORT void jl_safe_printf(const char *fmt, ...) JL_NOTSAFEPOINT
 {
     static char buf[1000];
     buf[0] = '\0';
+    int last_errno = errno;
+#ifdef _OS_WINDOWS_
+    DWORD last_error = GetLastError();
+#endif
 
     va_list args;
     va_start(args, fmt);
@@ -621,6 +625,10 @@ JL_DLLEXPORT void jl_safe_printf(const char *fmt, ...) JL_NOTSAFEPOINT
     if (write(STDERR_FILENO, buf, strlen(buf)) < 0) {
         // nothing we can do; ignore the failure
     }
+#ifdef _OS_WINDOWS_
+    SetLastError(last_error);
+#endif
+    errno = last_errno;
 }
 
 JL_DLLEXPORT void jl_exit(int exitcode)

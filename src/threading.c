@@ -113,7 +113,24 @@ BOOLEAN WINAPI DllMain(IN HINSTANCE hDllHandle, IN DWORD nReason,
 
 JL_DLLEXPORT JL_CONST_FUNC jl_ptls_t (jl_get_ptls_states)(void) JL_GLOBALLY_ROOTED
 {
-    return (jl_ptls_t)TlsGetValue(jl_tls_key);
+#if defined(_CPU_X86_64_)
+    DWORD *plast_error = (DWORD*)(__readgsqword(0x30) + 0x68);
+    DWORD last_error = *plast_error;
+#elif defined(_CPU_X86_)
+    DWORD *plast_error = (DWORD*)(__readfsdword(0x18) + 0x34);
+    DWORD last_error = *plast_error;
+#else
+    DWORD last_error = GetLastError();
+#endif
+    jl_ptls_t state = (jl_ptls_t)TlsGetValue(jl_tls_key);
+#if defined(_CPU_X86_64_)
+    *plast_error = last_error;
+#elif defined(_CPU_X86_)
+    *plast_error = last_error;
+#else
+    SetLastError(last_error);
+#endif
+    return state;
 }
 
 jl_get_ptls_states_func jl_get_ptls_states_getter(void)
