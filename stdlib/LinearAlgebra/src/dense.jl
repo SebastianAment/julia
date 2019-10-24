@@ -1254,16 +1254,11 @@ function factorize(A::StridedMatrix{T}) where T
         if utri
             return UpperTriangular(A)
         end
-        if herm
-            cf = cholesky(A; check = false)
-            if cf.info == 0
-                return cf
-            else
-                return factorize(Hermitian(A))
-            end
-        end
         if sym
             return factorize(Symmetric(A))
+        end
+        if herm
+            return factorize(Hermitian(A))
         end
         return lu(A)
     end

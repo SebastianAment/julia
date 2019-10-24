@@ -69,6 +69,13 @@ end
             @test_throws DimensionMismatch cholesky!(A)
         end
 
+        @testset "return cholesky from factorize on Symmetric and Hermitian types" begin
+            if eltya <: Real
+                @test isa(factorize(Symmetric(apd)), LinearAlgebra.Cholesky)
+            end
+            @test isa(factorize(Hermitian(apd)), LinearAlgebra.Cholesky)
+        end
+
         #Test error bound on reconstruction of matrix: LAWNS 14, Lemma 2.1
 
         #these tests were failing on 64-bit linux when inside the inner loop

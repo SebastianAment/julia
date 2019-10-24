@@ -564,13 +564,20 @@ end
 /(A::Hermitian, x::Real) = Hermitian(A.data/x, sym_uplo(A.uplo))
 
 factorize(A::HermOrSym) = _factorize(A)
-function _factorize(A::HermOrSym{T}; check::Bool=true) where T
-    TT = typeof(sqrt(oneunit(T)))
-    if TT <: BlasFloat
-        return bunchkaufman(A; check=check)
-    else # fallback
-        return lu(A; check=check)
+function _factorize(A::HermOrSym{T}; check::Bool = true) where T
+    # only try cholesky on real symmetric or Hermitian matrices
+    if T <: Real || typeof(A) <: Hermitian
+        chol = cholesky(A; check = false) # replace with pivoted Cholesky?
+        if issuccess(chol)
+            return chol
+        end
     end
+    # if cholesky fails, try BunchKaufman
+    if typeof(sqrt(oneunit(T))) <: BlasFloat
+        return bunchkaufman(A; check = check)
+    end
+    # if all else fails, return lu
+    return lu(A; check = check)
 end
 
 det(A::RealHermSymComplexHerm) = real(det(_factorize(A; check=false)))
