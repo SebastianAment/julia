@@ -983,9 +983,13 @@ julia> tr(A)
 5
 ```
 """
-function tr(A::AbstractMatrix)
+function tr(A::AbstractMatrix{T}) where T
     checksquare(A)
-    sum(diag(A))
+    t = zero(T)
+    for i = diagind(A, 0)
+        t += A[i]
+    end
+    return t
 end
 tr(x::Number) = x
 
